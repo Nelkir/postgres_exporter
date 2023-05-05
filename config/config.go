@@ -18,6 +18,8 @@ import (
 	"os"
 	"sync"
 
+	_ "net/http/pprof"
+
 	"github.com/go-kit/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"

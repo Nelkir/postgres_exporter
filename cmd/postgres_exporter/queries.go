@@ -26,6 +26,7 @@ import (
 type UserQuery struct {
 	Query        string    `yaml:"query"`
 	Metrics      []Mapping `yaml:"metrics"`
+	DBNames      []string  `yaml:"db_names"`      // Names of databases to run query on
 	Master       bool      `yaml:"master"`        // Querying only for master database
 	CacheSeconds uint64    `yaml:"cache_seconds"` // Number of seconds to cache the namespace result metrics for.
 	RunOnServer  string    `yaml:"runonserver"`   // Querying to run on which server version

@@ -21,6 +21,8 @@ import (
 	"sync"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/alecthomas/kingpin/v2"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -138,6 +140,7 @@ func NewPostgresCollector(logger log.Logger, excludeDatabases []string, dsn stri
 			if err != nil {
 				return nil, err
 			}
+			fmt.Printf("Collector %s created\n", key)
 			collectors[key] = collector
 			initiatedCollectors[key] = collector
 		}

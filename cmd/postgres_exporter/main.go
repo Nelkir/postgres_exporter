@@ -19,7 +19,10 @@ import (
 	"os"
 	"strings"
 
+	_ "net/http/pprof"
+
 	"github.com/alecthomas/kingpin/v2"
+	"github.com/evanj/concurrentlimit"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus-community/postgres_exporter/collector"
@@ -40,6 +43,7 @@ var (
 
 	configFile             = kingpin.Flag("config.file", "Postgres exporter configuration file.").Default("postgres_exporter.yml").String()
 	webConfig              = kingpinflag.AddFlags(kingpin.CommandLine, ":9187")
+	concurrentRequestLimit = kingpin.Flag("concurrentRequestLimit", "Limit of simultanious http requests for metrics endpoint").Default("5").Envar("CONCURRENT_REQUEST_LIMIT").Int()
 	metricsPath            = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("PG_EXPORTER_WEB_TELEMETRY_PATH").String()
 	disableDefaultMetrics  = kingpin.Flag("disable-default-metrics", "Do not include default metrics.").Default("false").Envar("PG_EXPORTER_DISABLE_DEFAULT_METRICS").Bool()
 	disableSettingsMetrics = kingpin.Flag("disable-settings-metrics", "Do not include pg_settings metrics.").Default("false").Envar("PG_EXPORTER_DISABLE_SETTINGS_METRICS").Bool()
@@ -132,7 +136,7 @@ func main() {
 		prometheus.MustRegister(pe)
 	}
 
-	http.Handle(*metricsPath, promhttp.Handler())
+	http.Handle(*metricsPath, concurrentlimit.Handler(concurrentlimit.New(*concurrentRequestLimit), promhttp.Handler()))
 
 	if *metricsPath != "/" && *metricsPath != "" {
 		landingConfig := web.LandingConfig{

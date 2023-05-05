@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/alecthomas/kingpin/v2 v2.3.2
 	github.com/blang/semver/v4 v4.0.0
+	github.com/evanj/concurrentlimit v0.0.0-20230218202827-fc4a1673c849
 	github.com/go-kit/log v0.2.1
 	github.com/lib/pq v1.10.7
 	github.com/prometheus/client_golang v1.14.0
