@@ -140,7 +140,6 @@ func NewPostgresCollector(logger log.Logger, excludeDatabases []string, dsn stri
 			if err != nil {
 				return nil, err
 			}
-			fmt.Printf("Collector %s created\n", key)
 			collectors[key] = collector
 			initiatedCollectors[key] = collector
 		}

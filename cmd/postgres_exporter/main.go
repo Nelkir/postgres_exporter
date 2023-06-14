@@ -14,21 +14,27 @@
 package main
 
 import (
+	// "bytes"
 	"fmt"
 	"net/http"
 	"os"
 	"strings"
+	// "time"
 
 	_ "net/http/pprof"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/evanj/concurrentlimit"
+	// "github.com/evanj/concurrentlimit"
 	"github.com/go-kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/prometheus-community/postgres_exporter/collector"
 	"github.com/prometheus-community/postgres_exporter/config"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	// "github.com/prometheus/client_golang/prometheus/promhttp"
+
+	// "github.com/prometheus/client_golang/prometheus/promhttp"
+	// io_prometheus_client "github.com/prometheus/client_model/go"
+	// "github.com/prometheus/common/expfmt"
 	"github.com/prometheus/common/promlog"
 	"github.com/prometheus/common/promlog/flag"
 	"github.com/prometheus/common/version"
@@ -43,7 +49,7 @@ var (
 
 	configFile             = kingpin.Flag("config.file", "Postgres exporter configuration file.").Default("postgres_exporter.yml").String()
 	webConfig              = kingpinflag.AddFlags(kingpin.CommandLine, ":9187")
-	concurrentRequestLimit = kingpin.Flag("concurrentRequestLimit", "Limit of simultanious http requests for metrics endpoint").Default("5").Envar("CONCURRENT_REQUEST_LIMIT").Int()
+	concurrentRequestLimit = kingpin.Flag("concurrent-request-limit", "Limit of simultanious http requests for metrics endpoint").Default("5").Envar("CONCURRENT_REQUEST_LIMIT").Int()
 	metricsPath            = kingpin.Flag("web.telemetry-path", "Path under which to expose metrics.").Default("/metrics").Envar("PG_EXPORTER_WEB_TELEMETRY_PATH").String()
 	disableDefaultMetrics  = kingpin.Flag("disable-default-metrics", "Do not include default metrics.").Default("false").Envar("PG_EXPORTER_DISABLE_DEFAULT_METRICS").Bool()
 	disableSettingsMetrics = kingpin.Flag("disable-settings-metrics", "Do not include pg_settings metrics.").Default("false").Envar("PG_EXPORTER_DISABLE_SETTINGS_METRICS").Bool()
@@ -54,6 +60,7 @@ var (
 	excludeDatabases       = kingpin.Flag("exclude-databases", "A list of databases to remove when autoDiscoverDatabases is enabled").Default("").Envar("PG_EXPORTER_EXCLUDE_DATABASES").String()
 	includeDatabases       = kingpin.Flag("include-databases", "A list of databases to include when autoDiscoverDatabases is enabled").Default("").Envar("PG_EXPORTER_INCLUDE_DATABASES").String()
 	metricPrefix           = kingpin.Flag("metric-prefix", "A metric prefix can be used to have non-default (not \"pg\") prefixes for each of the metrics").Default("pg").Envar("PG_EXPORTER_METRIC_PREFIX").String()
+	gatherInterval         = kingpin.Flag("gather-interval", "Interval to gather metrics from database").Envar("PG_EXPORTER_GATHER_INTERVAL").String()
 	logger                 = log.NewNopLogger()
 )
 
@@ -135,8 +142,15 @@ func main() {
 	} else {
 		prometheus.MustRegister(pe)
 	}
-
-	http.Handle(*metricsPath, concurrentlimit.Handler(concurrentlimit.New(*concurrentRequestLimit), promhttp.Handler()))
+  
+  withInterval := false
+  if gatherInterval != nil && *gatherInterval != "" {
+    withInterval = true 
+  } else {
+    withInterval = false 
+  }
+  
+  http.Handle(*metricsPath, GetHandler(withInterval))
 
 	if *metricsPath != "/" && *metricsPath != "" {
 		landingConfig := web.LandingConfig{
